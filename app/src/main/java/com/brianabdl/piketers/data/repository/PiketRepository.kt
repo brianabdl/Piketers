@@ -73,9 +73,9 @@ class PiketRepository {
                 message.append("Alhamdulillah Jazakumullahukhoiro.")
             }
             "tangga" -> {
-                message.append("Laki-Laki\nLantai 1 - 2: ${shuffledMembers[0]}\nLantai 3 - 4: ${shuffledMembers[1]}\n\n")
-                message.append("Perempuan\nLantai 1 - 2: ${shuffledMembers[2]}\nLantai 3 - 4: ${shuffledMembers[3]}\n\n")
-                message.append("Belakang\nLantai 1 - 2: ${shuffledMembers[4]}\nLantai 3 - 4: ${shuffledMembers[5]}\n\n")
+                message.append("Laki-Laki\nLantai 1 - 2: ${shuffledMembers[0]}\nLantai 2 - 3: ${shuffledMembers[1]}\n\n")
+                message.append("Perempuan\nLantai 1 - 2: ${shuffledMembers[2]}\nLantai 2 - 3: ${shuffledMembers[3]}\n\n")
+                message.append("Belakang\nLantai 1 - 2: ${shuffledMembers[4]}\nLantai 2 - 3: ${shuffledMembers[5]}\n\n")
                 message.append("Libur: ${shuffledMembers[6]}\n\n")
                 message.append("Monggo setelah piket bisa di react jika sudah selesai piket.\n")
                 message.append("Alhamdulillah Jazakumullahukhoiro.")
