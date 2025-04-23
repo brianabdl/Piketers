@@ -13,12 +13,11 @@ class PiketRepository {
     // Members list
     private val members = listOf(
         "Mas Brian",
-        "Mas Pras",
-        "Mas Jojo",
-        "Mas Azka",
-        "Mas Dito",
-        "Mas Nizar",
-        "Mas Fendi"
+        "Mas Bagas",
+        "Mas Royan",
+        "Mas Ruziq",
+        "Mas Affan",
+        "Mas Sahla",
     )
 
     // Schedule definition
@@ -61,14 +60,16 @@ class PiketRepository {
 
     // Generate message based on task type and assignments
     private fun generateMessage(taskType: String, shuffledMembers: List<String>): String {
-        val message = StringBuilder("*WAKTUNYA JADWAL PIKET ${taskType.uppercase()}*\n\n")
+        val message = StringBuilder("*JADWAL PIKET ${taskType.uppercase()}*\n\n")
 
         when (taskType) {
             "jendela" -> {
                 message.append("Lantai 1\nDalam: ${shuffledMembers[0]}\nLuar: ${shuffledMembers[1]}\n\n")
                 message.append("Lantai 2\nDalam: ${shuffledMembers[2]}\nLuar: ${shuffledMembers[3]}\n\n")
                 message.append("Lantai 3\nDalam: ${shuffledMembers[4]}\nLuar: ${shuffledMembers[5]}\n\n")
-                message.append("Sekat Besar: ${shuffledMembers[6]}\n\n")
+                if (shuffledMembers.size > 6) {
+                    message.append("Sekat Besar: ${shuffledMembers[6]}\n\n")
+                }
                 message.append("Monggo setelah piket bisa di react jika sudah selesai piket.\n")
                 message.append("Alhamdulillah Jazakumullahukhoiro.")
             }
@@ -76,12 +77,14 @@ class PiketRepository {
                 message.append("Laki-Laki\nLantai 1 - 2: ${shuffledMembers[0]}\nLantai 2 - 3: ${shuffledMembers[1]}\n\n")
                 message.append("Perempuan\nLantai 1 - 2: ${shuffledMembers[2]}\nLantai 2 - 3: ${shuffledMembers[3]}\n\n")
                 message.append("Belakang\nLantai 1 - 2: ${shuffledMembers[4]}\nLantai 2 - 3: ${shuffledMembers[5]}\n\n")
-                message.append("Libur: ${shuffledMembers[6]}\n\n")
+                if (shuffledMembers.size > 6) {
+                    message.append("Sekat Besar: ${shuffledMembers[6]}\n\n")
+                }
                 message.append("Monggo setelah piket bisa di react jika sudah selesai piket.\n")
                 message.append("Alhamdulillah Jazakumullahukhoiro.")
             }
             "makan", "sampah", "lantai 1", "lantai 2", "lantai 3" -> {
-                message.append("Kuy, piket $taskType")
+                return "Kuy, piket $taskType"
             }
         }
 

@@ -331,14 +331,15 @@ fun PiketAssignmentCard(assignment: PiketAssignment) {
                             Text("Luar: ${assignment.assignments[5]}")
                             Spacer(modifier = Modifier.height(8.dp))
                         }
-
-                        item {
-                            Text(
-                                text = "Sekat Besar",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text(assignment.assignments[6])
+                        if (assignment.assignments.size > 6) {
+                            item {
+                                Text(
+                                    text = "Sekat Besar",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                                Text(assignment.assignments[6])
+                            }
                         }
                     }
 
@@ -375,14 +376,15 @@ fun PiketAssignmentCard(assignment: PiketAssignment) {
                             Text("Lantai 3-4: ${assignment.assignments[5]}")
                             Spacer(modifier = Modifier.height(8.dp))
                         }
-
-                        item {
-                            Text(
-                                text = "Libur",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text(assignment.assignments[6])
+                        if (assignment.assignments.size > 6) {
+                            item {
+                                Text(
+                                    text = "Sekat Besar",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                                Text(assignment.assignments[6])
+                            }
                         }
                     }
 
