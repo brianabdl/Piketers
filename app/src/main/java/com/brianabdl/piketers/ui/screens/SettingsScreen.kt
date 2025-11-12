@@ -9,13 +9,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,11 +37,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.brianabdl.piketers.data.preferences.SettingsManager
-import com.brianabdl.piketers.utils.TelegramService
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -50,23 +47,17 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     settingsManager: SettingsManager,
-    telegramService: TelegramService,
     navigateBack: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var botToken by remember { mutableStateOf("") }
-    var targetChatId by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
-
-    var isSearchingUsername by remember { mutableStateOf(false) }
-    var searchStatus by remember { mutableStateOf<String?>(null) }
+    var members by remember { mutableStateOf(listOf<String>()) }
+    var newMemberName by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         // Load saved settings
-        botToken = settingsManager.botToken.first()
-        targetChatId = settingsManager.targetChatId.first()
+        members = settingsManager.members.first()
     }
 
     Scaffold(
@@ -85,8 +76,7 @@ fun SettingsScreen(
                     IconButton(
                         onClick = {
                             coroutineScope.launch {
-                                settingsManager.saveBotToken(botToken)
-                                settingsManager.saveTargetChatId(targetChatId)
+                                settingsManager.saveMembers(members)
                                 snackbarHostState.showSnackbar("Settings saved!")
                             }
                         }
@@ -108,38 +98,7 @@ fun SettingsScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // Bot Token Field
-            OutlinedTextField(
-                value = botToken,
-                onValueChange = { botToken = it },
-                label = { Text("Telegram Bot Token") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Helper Text
-            Text(
-                text = "Get a bot token from @BotFather on Telegram",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp, bottom = 16.dp)
-            )
-
-            // Target Chat ID Field
-            OutlinedTextField(
-                value = targetChatId,
-                onValueChange = { targetChatId = it },
-                label = { Text("Target Chat ID") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Username search section
+            // Members Management Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -152,102 +111,80 @@ fun SettingsScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "Find Chat ID by Username",
+                        text = "Manage Members",
                         style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // Add new member
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedTextField(
-                            value = username,
-                            onValueChange = { username = it },
-                            label = { Text("Username") },
+                            value = newMemberName,
+                            onValueChange = { newMemberName = it },
+                            label = { Text("New Member Name") },
                             modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            enabled = !isSearchingUsername
+                            singleLine = true
                         )
 
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Button(
                             onClick = {
-                                coroutineScope.launch {
-                                    if (botToken.isBlank()) {
-                                        snackbarHostState.showSnackbar("Please enter bot token first")
-                                        return@launch
-                                    }
-
-                                    if (username.isBlank()) {
-                                        snackbarHostState.showSnackbar("Please enter a username")
-                                        return@launch
-                                    }
-
-                                    try {
-                                        isSearchingUsername = true
-
-                                        telegramService.getChatIdByUsername(botToken, username)
-                                            .fold(
-                                                onSuccess = { chatId ->
-                                                    if (chatId != null) {
-                                                        targetChatId = chatId
-                                                        searchStatus = "Found! Chat ID is $chatId"
-                                                    } else {
-                                                        searchStatus = "Username not found. Ensure the user has messaged your bot."
-                                                    }
-                                                },
-                                                onFailure = { error ->
-                                                    searchStatus = "Error: ${error.message}"
-                                                }
-                                            )
-                                    } finally {
-                                        isSearchingUsername = false
-                                    }
+                                if (newMemberName.isNotBlank()) {
+                                    members = members + newMemberName.trim()
+                                    newMemberName = ""
                                 }
-                            },
-                            enabled = !isSearchingUsername
+                            }
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search"
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add"
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    if (searchStatus != null) {
+                    // List of members
+                    if (members.isEmpty()) {
                         Text(
-                            text = searchStatus!!,
+                            text = "No members added yet",
                             style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
-                    }
+                    } else {
+                        members.forEachIndexed { index, member ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "${index + 1}. $member",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.weight(1f)
+                                )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Helper text
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "Info",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = "The user must have sent at least one message to your bot for this to work.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                                IconButton(
+                                    onClick = {
+                                        members = members.filterIndexed { i, _ -> i != index }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

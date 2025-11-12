@@ -14,33 +14,32 @@ class SettingsManager(private val context: Context) {
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-        val BOT_TOKEN_KEY = stringPreferencesKey("bot_token")
-        val TARGET_CHAT_ID_KEY = stringPreferencesKey("target_chat_id")
+        val MEMBERS_KEY = stringPreferencesKey("members")
+        
+        // Default members
+        val DEFAULT_MEMBERS = listOf(
+            "Mas Brian",
+            "Mas Ruziq",
+            "Mas Falyd",
+            "Mas Tanzihan"
+        )
     }
 
-    // Get the saved bot token
-    val botToken: Flow<String> = context.dataStore.data
+    // Get the saved members list
+    val members: Flow<List<String>> = context.dataStore.data
         .map { preferences ->
-            preferences[BOT_TOKEN_KEY] ?: ""
+            val membersString = preferences[MEMBERS_KEY]
+            if (membersString.isNullOrBlank()) {
+                DEFAULT_MEMBERS
+            } else {
+                membersString.split("|").filter { it.isNotBlank() }
+            }
         }
 
-    // Get the saved target chat ID
-    val targetChatId: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[TARGET_CHAT_ID_KEY] ?: ""
-        }
-
-    // Save bot token
-    suspend fun saveBotToken(token: String) {
+    // Save members list
+    suspend fun saveMembers(membersList: List<String>) {
         context.dataStore.edit { preferences ->
-            preferences[BOT_TOKEN_KEY] = token
-        }
-    }
-
-    // Save target chat ID
-    suspend fun saveTargetChatId(chatId: String) {
-        context.dataStore.edit { preferences ->
-            preferences[TARGET_CHAT_ID_KEY] = chatId
+            preferences[MEMBERS_KEY] = membersList.joinToString("|")
         }
     }
 }

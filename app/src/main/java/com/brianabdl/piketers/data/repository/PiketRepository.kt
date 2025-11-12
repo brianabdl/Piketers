@@ -8,17 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.Calendar
 
-class PiketRepository {
-
-    // Members list
-    private val members = listOf(
-        "Mas Brian",
-        "Mas Bagas",
-        "Mas Royan",
-        "Mas Ruziq",
-        "Mas Affan",
-        "Mas Sahla",
-    )
+class PiketRepository(
+    private var members: List<String> = emptyList()
+) {
 
     // Schedule definition
     private val schedule = mapOf(
@@ -34,6 +26,11 @@ class PiketRepository {
     // Current assignment
     private val _currentAssignment = MutableStateFlow<PiketAssignment?>(null)
     val currentAssignment: StateFlow<PiketAssignment?> = _currentAssignment.asStateFlow()
+
+    // Update members list
+    fun updateMembers(newMembers: List<String>) {
+        members = newMembers
+    }
 
     // Get current day name in Indonesian
     fun getCurrentDayName(): String {
@@ -59,33 +56,90 @@ class PiketRepository {
     }
 
     // Generate message based on task type and assignments
-    private fun generateMessage(taskType: String, shuffledMembers: List<String>): String {
+    fun generateMessage(taskType: String, shuffledMembers: List<String>): String {
         val message = StringBuilder("*JADWAL PIKET ${taskType.uppercase()}*\n\n")
+        try {
+            when (taskType) {
+                "jendela" -> {
+                    val chunk = shuffledMembers.chunked(2)
+                    if (chunk.isNotEmpty()) {
+                        message.appendLine("Lantai 1")
+                        message.appendLine("Dalam: ${chunk[0].getOrElse(0, { "-" })}")
+                        message.appendLine("Luar: ${chunk[0].getOrElse(1, { "-" })}")
+                        message.appendLine()
+                    }
+                    if (chunk.size > 1) {
+                        message.appendLine("Lantai 2")
+                        message.appendLine("Dalam: ${chunk[1].getOrElse(0, { "-" })}")
+                        message.appendLine("Luar: ${chunk[1].getOrElse(1, { "-" })}")
+                        message.appendLine()
+                    }
+                    if (chunk.size > 2) {
+                        message.appendLine("Lantai 3")
+                        message.appendLine("Dalam: ${chunk[2].getOrElse(0, { "-" })}")
+                        message.appendLine("Luar: ${chunk[2].getOrElse(1, { "-" })}")
+                        message.appendLine()
+                    }
+                    if (chunk.size > 3) {
+                        message.appendLine("Sekat Besar: ${chunk[3].getOrElse(0, { "-" })}")
+                        message.appendLine()
+                    }
+                    message.appendLine("Monggo setelah piket bisa di react jika sudah selesai piket.")
+                    message.append("Alhamdulillah Jazakumullahukhoiro.")
+                }
 
-        when (taskType) {
-            "jendela" -> {
-                message.append("Lantai 1\nDalam: ${shuffledMembers[0]}\nLuar: ${shuffledMembers[1]}\n\n")
-                message.append("Lantai 2\nDalam: ${shuffledMembers[2]}\nLuar: ${shuffledMembers[3]}\n\n")
-                message.append("Lantai 3\nDalam: ${shuffledMembers[4]}\nLuar: ${shuffledMembers[5]}\n\n")
-                if (shuffledMembers.size > 6) {
-                    message.append("Sekat Besar: ${shuffledMembers[6]}\n\n")
+                "tangga" -> {
+                    val chunk = shuffledMembers.chunked(2)
+                    if (chunk.isNotEmpty()) {
+                        message.appendLine("Laki-Laki")
+                        message.appendLine("Lantai 1 - 2: ${chunk[0].getOrElse(0, { "-" })}")
+                        message.appendLine("Lantai 2 - 3: ${chunk[0].getOrElse(1, { "-" })}")
+                        message.appendLine()
+                    }
+                    if (chunk.size > 1) {
+                        message.appendLine("Perempuan")
+                        message.appendLine("Lantai 1 - 2: ${chunk[1].getOrElse(0, { "-" })}")
+                        message.appendLine("Lantai 2 - 3: ${chunk[1].getOrElse(1, { "-" })}")
+                        message.appendLine()
+                    }
+                    if (chunk.size > 2) {
+                        message.appendLine("Belakang")
+                        message.appendLine("Lantai 1 - 2: ${chunk[2].getOrElse(0, { "-" })}")
+                        message.appendLine("Lantai 2 - 3: ${chunk[2].getOrElse(1, { "-" })}")
+                        message.appendLine()
+                    }
+                    if (chunk.size > 3) {
+                        message.appendLine("Sekat Besar: ${chunk[3].getOrElse(0, { "-" })}")
+                        message.appendLine()
+                    }
+                    message.appendLine("Monggo setelah piket bisa di react jika sudah selesai piket.")
+                    message.append("Alhamdulillah Jazakumullahukhoiro.")
                 }
-                message.append("Monggo setelah piket bisa di react jika sudah selesai piket.\n")
-                message.append("Alhamdulillah Jazakumullahukhoiro.")
-            }
-            "tangga" -> {
-                message.append("Laki-Laki\nLantai 1 - 2: ${shuffledMembers[0]}\nLantai 2 - 3: ${shuffledMembers[1]}\n\n")
-                message.append("Perempuan\nLantai 1 - 2: ${shuffledMembers[2]}\nLantai 2 - 3: ${shuffledMembers[3]}\n\n")
-                message.append("Belakang\nLantai 1 - 2: ${shuffledMembers[4]}\nLantai 2 - 3: ${shuffledMembers[5]}\n\n")
-                if (shuffledMembers.size > 6) {
-                    message.append("Sekat Besar: ${shuffledMembers[6]}\n\n")
+
+                "makan" -> {
+                    val half = shuffledMembers.size / 2
+                    val pagiMembers = shuffledMembers.take(half)
+                    val soreMembers = shuffledMembers.drop(half)
+
+                    message.appendLine("=== Pagi ===")
+                    pagiMembers.forEachIndexed { index, name ->
+                        message.appendLine("${index + 1}. $name")
+                    }
+
+                    message.appendLine()
+                    message.appendLine("=== Sore ===")
+                    soreMembers.forEachIndexed { index, name ->
+                        message.appendLine("${index + 1}. $name")
+                    }
                 }
-                message.append("Monggo setelah piket bisa di react jika sudah selesai piket.\n")
-                message.append("Alhamdulillah Jazakumullahukhoiro.")
+
+                "sampah", "lantai 1", "lantai 2", "lantai 3" -> {
+                    return "Kuy, piket $taskType"
+                }
             }
-            "makan", "sampah", "lantai 1", "lantai 2", "lantai 3" -> {
-                return "Kuy, piket $taskType"
-            }
+        } catch (e: Exception) {
+            message.appendLine("Terjadi kesalahan saat menghasilkan pesan.")
+            e.printStackTrace()
         }
 
         return message.toString()

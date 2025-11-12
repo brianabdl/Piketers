@@ -39,25 +39,27 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.brianabdl.piketers.data.models.PiketAssignment
-import com.brianabdl.piketers.data.preferences.SettingsManager
 import com.brianabdl.piketers.data.repository.PiketRepository
-import com.brianabdl.piketers.utils.TelegramService
 import com.brianabdl.piketers.utils.WhatsappService
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     piketRepository: PiketRepository,
-    settingsManager: SettingsManager,
-    telegramService: TelegramService,
     navigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
@@ -65,7 +67,6 @@ fun HomeScreen(
     val currentDay = piketRepository.getCurrentDayName()
     val coroutineScope = rememberCoroutineScope()
 
-    var isSending by remember { mutableStateOf(false) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var showSnackbar by remember { mutableStateOf(false) }
 
@@ -197,7 +198,9 @@ fun HomeScreen(
                                 }
                             }
                         }
-                    }) {
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send"
@@ -205,61 +208,6 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Send to WhatsApp")
                 }
-            }
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        currentAssignment?.let { assignment ->
-                            isSending = true
-                            statusMessage = null
-
-                            try {
-                                val botToken = settingsManager.botToken.first()
-                                val chatId = settingsManager.targetChatId.first()
-
-                                if (botToken.isBlank()) {
-                                    statusMessage =
-                                        "Bot token tidak ditemukan. Silakan masukkan di pengaturan."
-                                    showSnackbar = true
-                                    return@launch
-                                }
-
-                                if (chatId.isBlank()) {
-                                    statusMessage =
-                                        "Chat ID tidak ditemukan. Silakan masukkan di pengaturan."
-                                    showSnackbar = true
-                                    return@launch
-                                }
-
-                                val result = telegramService.sendMessage(
-                                    botToken = botToken,
-                                    chatId = chatId,
-                                    text = assignment.message
-                                )
-
-                                result.fold(
-                                    onSuccess = { success ->
-                                        statusMessage = success
-                                        showSnackbar = true
-                                    },
-                                    onFailure = { error ->
-                                        statusMessage = "Error: ${error.message}"
-                                        showSnackbar = true
-                                    }
-                                )
-                            } finally {
-                                isSending = false
-                            }
-                        }
-                    }
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send"
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Send to Telegram")
             }
 
             if (showSnackbar && statusMessage != null) {
@@ -286,118 +234,61 @@ fun PiketAssignmentCard(assignment: PiketAssignment) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = "JADWAL PIKET ${assignment.taskType.uppercase()}",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn {
-                when (assignment.taskType) {
-                    "jendela" -> {
-                        item {
-                            Text(
-                                text = "Lantai 1",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text("Dalam: ${assignment.assignments[0]}")
-                            Text("Luar: ${assignment.assignments[1]}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
-                        item {
-                            Text(
-                                text = "Lantai 2",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text("Dalam: ${assignment.assignments[2]}")
-                            Text("Luar: ${assignment.assignments[3]}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
-                        item {
-                            Text(
-                                text = "Lantai 3",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text("Dalam: ${assignment.assignments[4]}")
-                            Text("Luar: ${assignment.assignments[5]}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        if (assignment.assignments.size > 6) {
-                            item {
-                                Text(
-                                    text = "Sekat Besar",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                                Text(assignment.assignments[6])
-                            }
-                        }
-                    }
-
-                    "tangga" -> {
-                        item {
-                            Text(
-                                text = "Laki-Laki",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text("Lantai 1-2: ${assignment.assignments[0]}")
-                            Text("Lantai 3-4: ${assignment.assignments[1]}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
-                        item {
-                            Text(
-                                text = "Perempuan",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text("Lantai 1-2: ${assignment.assignments[2]}")
-                            Text("Lantai 3-4: ${assignment.assignments[3]}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
-                        item {
-                            Text(
-                                text = "Belakang",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text("Lantai 1-2: ${assignment.assignments[4]}")
-                            Text("Lantai 3-4: ${assignment.assignments[5]}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        if (assignment.assignments.size > 6) {
-                            item {
-                                Text(
-                                    text = "Sekat Besar",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                                Text(assignment.assignments[6])
-                            }
-                        }
-                    }
-
-                    else -> {
-                        item {
-                            Text(
-                                text = "Kuy, piket ${assignment.taskType}",
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
-                }
+            val annotatedString = buildAnnotatedString {
+                appendStyledText(assignment.message)
             }
+            Text(
+                text = annotatedString,
+                fontSize = 18.sp,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+
+fun AnnotatedString.Builder.appendStyledText(text: String) {
+    // Define regex patterns
+    val patterns = listOf(
+        Pair("\\*(.*?)\\*", SpanStyle(fontWeight = FontWeight.Bold)),      // *bold*
+        Pair("_(.*?)_", SpanStyle(fontStyle = FontStyle.Italic)),          // _italic_
+        Pair("~(.*?)~", SpanStyle(textDecoration = TextDecoration.LineThrough)), // ~strike~
+        Pair("`(.*?)`", SpanStyle(fontFamily = FontFamily.Monospace, color = Color(0xFF2E7D32))) // `monospace`
+    )
+
+    // Keep track of remaining text
+    var remaining = text
+    var lastIndex = 0
+
+    while (remaining.isNotEmpty()) {
+        var earliestMatch: MatchResult? = null
+        var earliestPattern: Pair<String, SpanStyle>? = null
+
+        // Find the earliest match across all patterns
+        for (pattern in patterns) {
+            val regex = Regex(pattern.first)
+            val match = regex.find(remaining)
+            if (match != null && (earliestMatch == null || match.range.first < earliestMatch.range.first)) {
+                earliestMatch = match
+                earliestPattern = pattern
+            }
+        }
+
+        if (earliestMatch != null && earliestPattern != null) {
+            // Append text before the match (normal style)
+            append(remaining.substring(0, earliestMatch.range.first))
+
+            // Apply span to matched content (without markers)
+            pushStyle(earliestPattern.second)
+            append(earliestMatch.groupValues[1])
+            pop()
+
+            // Move past this match
+            remaining = remaining.substring(earliestMatch.range.last + 1)
+        } else {
+            // No more matches, append the rest
+            append(remaining)
+            break
         }
     }
 }
