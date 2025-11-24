@@ -30,6 +30,7 @@ class PiketRepository(
     // Update members list
     fun updateMembers(newMembers: List<String>) {
         members = newMembers
+        generateTodayPiketAssignment()
     }
 
     // Get current day name in Indonesian

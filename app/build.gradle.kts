@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.brianabdl.piketers"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.brianabdl.piketers"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -28,11 +28,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true
@@ -53,6 +50,9 @@ dependencies {
     implementation(libs.androidx.datastore.datastore.preferences)
     implementation(libs.com.squareup.okhttp3.okhttp)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.material.icons)
+    implementation(libs.androidx.material.icons.extended)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
